@@ -68,7 +68,11 @@ class GenerateMazeController extends Controller
         }
         $this->maze[$this->m-1][0][3] = "Space";
         $this->maze[0][$this->n-1][1] = "Space";
+
+        return $this->maze;
+        
     }
+
 
     private function getAllEdges() {
     $edges = array();

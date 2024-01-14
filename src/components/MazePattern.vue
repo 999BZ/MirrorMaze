@@ -2,33 +2,39 @@
   <div class="flex flex-col gap-2">
     <div class="flex justify-center gap-5">
       <div class="flex h-auto justify-center content-center flex-wrap w-1/4">
-        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" @click="getMaze">New
+        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" :disabled="this.stop"
+          @click="getMaze">New
           maze</button>
       </div>
-      <div class="flex flex-wrap flex-col border-2 border-black">
+      <div class="flex flex-wrap flex-col">
         <div v-for="(row, rowIndex) in maze" :key="`row${rowIndex}`" class="flex">
-          <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`" class="w-12 h-12 hover:border-2 cursor-pointer"
+          <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`"
+            class="w-12 h-12 hover:border-2 cursor-pointer border-black" :disabled="this.stop"
             @click="setMirror(rowIndex, colIndex)" :class="{
-              'bg-black border-white': cell.status == 0,
-              'bg-white border-black': cell.status == 1,
-              'bg-green-400 border-black': cell.status == 2,
+              'bg-white': !cell.status,
+              'bg-yellow-400': cell.status,
+              'border-t-2': cell[0] == 'Wall',
+              'border-r-2': cell[1] == 'Wall',
+              'border-b-2': cell[2] == 'Wall',
+              'border-l-2': cell[3] == 'Wall',
             }">
-            <img :src="cell.mirror == 1 ? mirror1 : mirror2" class="w-full h-full" v-if="cell.mirror != 0">
+            <img :src="cell.mirror == 1 ? mirror1 : mirror2" class="w-full h-full" v-if="cell.mirror">
           </div>
         </div>
       </div>
       <div class="flex h-auto justify-center content-center flex-wrap w-1/4">
-        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" @click="showSolution">Show
+        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" :disabled="this.stop"
+          @click="showSolution">Show
           solution</button>
       </div>
     </div>
     <div class="w-full flex justify-center">
       <div class="w-auto flex gap-2">
-        <img :src="mirror1" class="w-16 h-16 border-2 border-black cursor-pointer" @click="selectMirror(1)"
-          :class="{ 'bg-gray-500': this.selectedMirror == 1 }">
-        <img :src="mirror2" class="w-16 h-16 border-2 border-black cursor-pointer" @click="selectMirror(2)"
-          :class="{ 'bg-gray-500': this.selectedMirror == 2 }">
-        <button class="px-5 py-2 text-lg border-2 border-red-500" @click="selectRemove" :class="{
+        <img :src="mirror1" class="w-16 h-16 border-2 border-black cursor-pointer" :disabled="this.stop"
+          @click="selectMirror(1)" :class="{ 'bg-gray-500': this.selectedMirror == 1 }">
+        <img :src="mirror2" class="w-16 h-16 border-2 border-black cursor-pointer" :disabled="this.stop"
+          @click="selectMirror(2)" :class="{ 'bg-gray-500': this.selectedMirror == 2 }">
+        <button class="px-5 py-2 text-lg border-2 border-red-500" :disabled="this.stop" @click="selectRemove" :class="{
           'text-red-500 bg-white': !this.removeSelected,
           'bg-red-500 text-white': this.removeSelected
         }">Remove
@@ -38,17 +44,19 @@
 
     <div class="w-full flex justify-center">
       <div class="w-auto gap-2 flex">
-        <button class="px-5 py-2 text-lg border-2 border-black" @click="start()">Start</button>
-        <button class="px-5 py-2 text-lg border-2 border-black" @click="reset()">Reset</button>
+        <button class="px-5 py-2 text-lg border-2 border-black" :disabled="this.stop" @click="start()">Start</button>
+        <button class="px-5 py-2 text-lg border-2 border-black" :disabled="this.stop" @click="reset()">Reset</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import Api from '../services/api.js';
+
 export default {
   beforeMount() {
-    this.generateMaze();
+    this.getMaze();
   },
   data() {
     return {
@@ -59,45 +67,18 @@ export default {
       mirror2: require('../assets/2.png'),
       directionFrom: 'left',
       startPoint: null,
-      endPoint: 5,
+      endPoint: 0,
+      stop: false,
     };
   },
   methods: {
-    generateMaze() {
-      let matrix = [
-        [{ status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 },
-        { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }],
-        [{ status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 },
-        { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }],
-        [{ status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 },
-        { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }],
-        [{ status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 },
-        { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }],
-        [{ status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 },
-        { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }],
-        [{ status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 },
-        { status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }],
-        [{ status: 0, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }, { status: 1, mirror: 0 },
-        { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 1, mirror: 0 }, { status: 0, mirror: 0 }],
-        [{ status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 },
-        { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }]
-      ];
-      for (let i = 0; i < 8; i++) {
-        if (matrix[i][0].status == 1) {
-          this.startPoint = i;
-          break;
-        }
-      }
-
+    async getMaze() {
+      let a = await Api.getGeneratedMaze();
       if (this.startPoint == null) {
-        this.startPoint = 3;
+        this.startPoint = 9;
       }
-      matrix[this.startPoint][0].status = 2;
-      this.maze = matrix;
-      this.resetMaze = matrix;
-    },
-    getMaze() {
-      // Get a generated maze from backend using API
+      this.maze = a.data;
+      this.resetMaze = a.data;
     },
     showSolution() {
       // Get the solution from backend using API
@@ -107,7 +88,7 @@ export default {
         this.maze[rowIndex][colIndex].mirror = 0;
       else if (this.selectedMirror != 0) {
         this.maze[rowIndex][colIndex].mirror = this.selectedMirror;
-        if (this.maze[rowIndex][colIndex].status == 2) {
+        if (!this.maze[rowIndex][colIndex].status) {
           if (this.directionFrom == 'left') {
             this.directionFrom = this.selectedMirror == 1 ? 'up' : 'down';
           } else if (this.directionFrom == 'right') {
@@ -130,59 +111,73 @@ export default {
       this.selectedMirror = 0;
     },
     reset() {
-      for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 8; j++) {
-          if (this.maze[i][j].status == 2) this.maze[i][j].status = 1;
-          this.maze[i][j].mirror = 0
+      this.stop = true;
+      for (let i = 0; i < this.maze.length; i++) {
+        for (let j = 0; j < this.maze[0].length; j++) {
+          this.maze[i][j].status = false;
+          this.maze[i][j].mirror = null;
         }
       }
-      this.maze[this.startPoint][0].status = 2;
       this.removeSelected = false;
       this.selectedMirror = 0;
+      this.stop = false;
     },
     async start() {
+      this.stop = true;
       let rowIndex = this.startPoint, colIndex = 0, dir = 'left';
-      while (rowIndex < 8 && colIndex < 8 && this.maze[rowIndex][colIndex].status != 0) {
-        this.maze[rowIndex][colIndex].status = 2;
+      while (colIndex != this.maze[0].length || rowIndex != this.endPoint) {
+        this.maze[rowIndex][colIndex].status = true;
         await new Promise(resolve => setTimeout(resolve, 200));
         if (dir == 'left') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             dir = 'up';
             rowIndex++;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             dir = 'down';
             rowIndex--;
           } else {
+            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             colIndex++;
           }
         } else if (dir == 'right') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             dir = 'down';
             rowIndex--;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             dir = 'up';
             rowIndex++;
           } else {
+            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             colIndex--;
           }
         } else if (dir == 'up') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             dir = 'left';
             colIndex++;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             dir = 'right';
             colIndex--;
           } else {
+            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             rowIndex++;
           }
         } else if (dir == 'down') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             dir = 'right';
             colIndex--;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             dir = 'left';
             colIndex++;
           } else {
+            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             rowIndex--;
           }
         } else {
@@ -192,8 +187,14 @@ export default {
       if (colIndex == this.maze[0].length && rowIndex == this.endPoint) {
         alert('Well done. You have finished it.');
       } else {
-        alert('You lost. Good luck next time!')
+        alert('You lost. Good luck next time!');
+        for (let i = 0; i < this.maze.length; i++) {
+          for (let j = 0; j < this.maze[0].length; j++) {
+            this.maze[i][j].status = false;
+          }
+        }
       }
+      this.stop = false;
     }
   }
 };

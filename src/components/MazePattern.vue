@@ -1,9 +1,13 @@
 <template>
   <div class="flex flex-col gap-2">
-    <div class="flex justify-center">
+    <div class="flex justify-center gap-5">
+      <div class="flex h-auto justify-center content-center flex-wrap w-1/4">
+        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" @click="getMaze">New
+          maze</button>
+      </div>
       <div class="flex flex-wrap flex-col border-2 border-black">
         <div v-for="(row, rowIndex) in maze" :key="`row${rowIndex}`" class="flex">
-          <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`" class="w-8 h-8 hover:border-2 cursor-pointer"
+          <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`" class="w-12 h-12 hover:border-2 cursor-pointer"
             @click="setMirror(rowIndex, colIndex)" :class="{
               'bg-black border-white': cell.status == 0,
               'bg-white border-black': cell.status == 1,
@@ -13,6 +17,10 @@
           </div>
         </div>
       </div>
+      <div class="flex h-auto justify-center content-center flex-wrap w-1/4">
+        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" @click="showSolution">Show
+          solution</button>
+      </div>
     </div>
     <div class="w-full flex justify-center">
       <div class="w-auto flex gap-2">
@@ -20,7 +28,7 @@
           :class="{ 'bg-gray-500': this.selectedMirror == 1 }">
         <img :src="mirror2" class="w-16 h-16 border-2 border-black cursor-pointer" @click="selectMirror(2)"
           :class="{ 'bg-gray-500': this.selectedMirror == 2 }">
-        <button class="px-3 py-2 rounded-lg border-2 border-red-500" @click="selectRemove" :class="{
+        <button class="px-5 py-2 text-lg border-2 border-red-500" @click="selectRemove" :class="{
           'text-red-500 bg-white': !this.removeSelected,
           'bg-red-500 text-white': this.removeSelected
         }">Remove
@@ -30,8 +38,8 @@
 
     <div class="w-full flex justify-center">
       <div class="w-auto gap-2 flex">
-        <button class="px-3 py-2 rounded-lg border-2 border-green-500 text-green-500" @click="start()">Start</button>
-        <button class="px-3 py-2 rounded-lg border-2 border-sky-500 text-sky-500" @click="reset()">Reset</button>
+        <button class="px-5 py-2 text-lg border-2 border-black" @click="start()">Start</button>
+        <button class="px-5 py-2 text-lg border-2 border-black" @click="reset()">Reset</button>
       </div>
     </div>
   </div>
@@ -74,18 +82,6 @@ export default {
         [{ status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 },
         { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }, { status: 0, mirror: 0 }]
       ];
-      // for (let i = 0; i < 8; i++) {
-      //   const row = [];
-      //   for (let j = 0; j < 8; j++) {
-      //     const cell = {
-      //       status: Math.floor(Math.random() * 2),
-      //       mirror: false
-      //     };
-      //     row.push(cell);
-      //   }
-      //   matrix.push(row);
-      // }
-
       for (let i = 0; i < 8; i++) {
         if (matrix[i][0].status == 1) {
           this.startPoint = i;
@@ -99,6 +95,12 @@ export default {
       matrix[this.startPoint][0].status = 2;
       this.maze = matrix;
       this.resetMaze = matrix;
+    },
+    getMaze() {
+      // Get a generated maze from backend using API
+    },
+    showSolution() {
+      // Get the solution from backend using API
     },
     setMirror(rowIndex, colIndex) {
       if (this.removeSelected)

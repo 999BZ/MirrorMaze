@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\GenerateMazeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,6 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Route::get('/', [GenerateMazeController::class, 'show']);
+
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/generateMaze',  [GenerateMazeController::class, 'generateMaze']);

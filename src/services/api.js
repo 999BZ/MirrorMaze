@@ -5,7 +5,7 @@ export default {
     console.log("🚀 ~ getGeneratedMaze ~ difficulty:", difficulty);
     let config = {
       method: "get",
-      url: "http://ec2-3-77-201-33.eu-central-1.compute.amazonaws.com/generateMaze",
+      url: "//ec2-3-77-201-33.eu-central-1.compute.amazonaws.com/generateMaze",
       // data: { difficulty },
     };
 

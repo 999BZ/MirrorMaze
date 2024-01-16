@@ -2,9 +2,7 @@
   <div class="flex flex-col gap-2">
     <div class="flex justify-center gap-5">
       <div class="flex h-auto justify-center content-center flex-wrap w-1/4">
-        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" :disabled="this.stop"
-          @click="getMaze">New
-          maze</button>
+        <custom-button text="New Maze" @do-action="getMaze" :disabled="this.stop"></custom-button>
       </div>
       <div class="flex flex-wrap flex-col">
         <div v-for="(row, rowIndex) in maze" :key="`row${rowIndex}`" class="flex">
@@ -23,9 +21,7 @@
         </div>
       </div>
       <div class="flex h-auto justify-center content-center flex-wrap w-1/4">
-        <button class="px-5 py-2 text-lg border-2 border-black bg-black/10 h-min" :disabled="this.stop"
-          @click="showSolution">Show
-          solution</button>
+        <custom-button text="Show solution" @do-action="showSolution" :disabled="this.stop"></custom-button>
       </div>
     </div>
     <div class="w-full flex justify-center">
@@ -34,27 +30,33 @@
           @click="selectMirror(1)" :class="{ 'bg-gray-500': this.selectedMirror == 1 }">
         <img :src="mirror2" class="w-16 h-16 border-2 border-black cursor-pointer" :disabled="this.stop"
           @click="selectMirror(2)" :class="{ 'bg-gray-500': this.selectedMirror == 2 }">
-        <button class="px-5 py-2 text-lg border-2 border-red-500" :disabled="this.stop" @click="selectRemove" :class="{
+        <custom-button text="Remove mirror" @do-action="selectRemove" :disabled="this.stop" :class="{
           'text-red-500 bg-white': !this.removeSelected,
           'bg-red-500 text-white': this.removeSelected
-        }">Remove
-          mirror</button>
+        }"></custom-button>
       </div>
     </div>
-
     <div class="w-full flex justify-center">
       <div class="w-auto gap-2 flex">
-        <button class="px-5 py-2 text-lg border-2 border-black" :disabled="this.stop" @click="start()">Start</button>
-        <button class="px-5 py-2 text-lg border-2 border-black" :disabled="this.stop" @click="reset()">Reset</button>
+        <custom-button text="Start" @do-action="start" :disabled="this.stop"></custom-button>
+        <custom-button text="Reset" @do-action="reset(true)" :disabled="this.stop"></custom-button>
       </div>
     </div>
   </div>
+  <alert-box v-if="this.result" :result="result" @close-box="this.result = null" @try-again="reset"></alert-box>
 </template>
 
 <script>
 import Api from '../services/api.js';
 
+import CustomButton from './CustomButton.vue';
+import AlertBox from './AlertBox.vue';
+
 export default {
+  components: {
+    CustomButton,
+    AlertBox
+  },
   beforeMount() {
     this.getMaze();
   },
@@ -69,6 +71,7 @@ export default {
       startPoint: null,
       endPoint: 0,
       stop: false,
+      result: null,
     };
   },
   methods: {
@@ -110,17 +113,26 @@ export default {
       this.removeSelected = !this.removeSelected;
       this.selectedMirror = 0;
     },
-    reset() {
+    reset(shouldRemoveMirrors = false) {
       this.stop = true;
-      for (let i = 0; i < this.maze.length; i++) {
-        for (let j = 0; j < this.maze[0].length; j++) {
-          this.maze[i][j].status = false;
-          this.maze[i][j].mirror = null;
+      if (shouldRemoveMirrors) {
+        for (let i = 0; i < this.maze.length; i++) {
+          for (let j = 0; j < this.maze[0].length; j++) {
+            this.maze[i][j].status = false;
+            this.maze[i][j].mirror = null;
+          }
+        }
+      } else {
+        for (let i = 0; i < this.maze.length; i++) {
+          for (let j = 0; j < this.maze[0].length; j++) {
+            this.maze[i][j].status = false;
+          }
         }
       }
       this.removeSelected = false;
       this.selectedMirror = 0;
       this.stop = false;
+      this.result = null;
     },
     async start() {
       this.stop = true;
@@ -185,14 +197,9 @@ export default {
         }
       }
       if (colIndex == this.maze[0].length && rowIndex == this.endPoint) {
-        alert('Well done. You have finished it.');
+        this.result = 'success';
       } else {
-        alert('You lost. Good luck next time!');
-        for (let i = 0; i < this.maze.length; i++) {
-          for (let j = 0; j < this.maze[0].length; j++) {
-            this.maze[i][j].status = false;
-          }
-        }
+        this.result = 'failure';
       }
       this.stop = false;
     }

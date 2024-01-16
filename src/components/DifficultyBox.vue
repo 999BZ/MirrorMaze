@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full h-full fixed top-0 left-0 flex justify-center content-center flex-wrap bg-white/70"
+    <div class="w-full h-full fixed top-0 left-0 flex justify-center content-center flex-wrap bg-black/50"
         @click="this.$emit('close-box')">
         <div class="w-1/2 h-auto p-6 flex justify-evenly flex-col rounded-lg border-4 gap-6 text-white bg-black/40"
             @click.stop>

@@ -9,12 +9,14 @@
       </div>
       <div class="flex h-auto justify-center" v-else>
         <div class="h-full flex flex-col justify-end">
-          <img src="./assets/light.png" class="bg-white border-y" :style="{ height: `${100 / this.maze.length}%` }" />
+          <img src="./assets/light.png" class="bg-white border-y"
+            :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
         </div>
         <div class="flex flex-wrap flex-col" style="height: 32.5rem; width: 32.5rem;">
           <div v-for="(row, rowIndex) in maze" :key="`row${rowIndex}`" class="flex"
-            :style="{ height: `${100 / this.maze.length}%` }">
-            <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`" :style="{ width: `${100 / this.maze.length}%` }"
+            :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }">
+            <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`"
+              :style="{ width: `${this.maze ? 100 / this.maze.length : 0}%` }"
               class="hover:border-2 cursor-pointer border-black" :disabled="this.stop"
               @click="setMirror(rowIndex, colIndex)" :class="{
                 'bg-white': !cell.status,
@@ -30,7 +32,8 @@
           </div>
         </div>
         <div class="h-full flex flex-col justify-start">
-          <img src="./assets/light.png" class="bg-white border-y" :style="{ height: `${100 / this.maze.length}%` }" />
+          <img src="./assets/light.png" class="bg-white border-y"
+            :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
         </div>
       </div>
       <div class="flex h-auto justify-center content-center flex-wrap w-1/2">
@@ -101,12 +104,16 @@ export default {
     async getMaze(difficulty) {
       this.isLoading = true;
       this.chooseDifficulty = false;
-      let a = await Api.getGeneratedMaze(difficulty);
-      if (this.startPoint == null) {
-        this.startPoint = 9;
+      try {
+        let a = await Api.getGeneratedMaze(difficulty);
+        if (this.startPoint == null) {
+          this.startPoint = 9;
+        }
+        this.maze = a.data;
+        this.resetMaze = a.data;
+      } catch (error) {
+        console.log(error)
       }
-      this.maze = a.data;
-      this.resetMaze = a.data;
       this.isLoading = false;
     },
     showSolution() {
@@ -157,13 +164,13 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 200));
         if (dir == 'left') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
-            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = true;
+            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             dir = 'up';
             rowIndex++;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
-            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = false;
+            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             dir = 'down';
             rowIndex--;
           } else {
@@ -172,13 +179,13 @@ export default {
           }
         } else if (dir == 'right') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
-            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = false;
+            if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             dir = 'down';
             rowIndex--;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
-            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = true;
+            if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             dir = 'up';
             rowIndex++;
           } else {
@@ -187,13 +194,13 @@ export default {
           }
         } else if (dir == 'up') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
-            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = false;
+            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             dir = 'left';
             colIndex++;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
-            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = false;
+            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             dir = 'right';
             colIndex--;
           } else {
@@ -202,13 +209,13 @@ export default {
           }
         } else if (dir == 'down') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
-            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = true;
+            if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             dir = 'right';
             colIndex--;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
-            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             this.maze[rowIndex][colIndex].rotate = true;
+            if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             dir = 'left';
             colIndex++;
           } else {

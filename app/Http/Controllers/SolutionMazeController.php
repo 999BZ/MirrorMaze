@@ -29,6 +29,7 @@ private $n;
                     list($x, $y) = explode(",", $pair);
                     $this->path[] = ['x' => (int)$x, 'y' => (int)$y];
                 }
+                $this->addMirrors();
                 return $this->path;
             }
             $this->queueNodes($NodeX, $NodeY, $edges, $currentPath);
@@ -81,5 +82,41 @@ private function getEdges(){
                 array_push($this->queue, [$nextNode[0], $nextNode[1], $newPath]);
             }
         }
+    }
+    private function addMirrors(){
+        $direction = "L->R";
+        for ($i = 0; $i < sizeof($this->path) - 1; $i++) {
+            $currentY = $this->path[$i]['y'];
+            $nextY = $this->path[$i + 1]['y'];
+
+            $currentX = $this->path[$i]['x'];
+            $nextX = $this->path[$i + 1]['x'];
+
+            if ($currentY != $nextY) {
+                if ($direction == "L->R") {
+                    $this->path[$i]['m'] = ($currentY > $nextY) ? 1 : 2;
+                    $direction = ($currentY > $nextY) ? "U->D" : "D->U";
+                    if ($currentY < $nextY) {
+                        $this->path[$i]['rotate'] = true;
+                    }
+                } elseif ($direction == "R->L") {
+                    $this->path[$i]['m'] = ($currentY > $nextY) ? 2 : 1;
+                    $direction = ($currentY > $nextY) ? "U->D" : "D->U";
+                    if ($currentY < $nextY) {
+                        $this->path[$i]['rotate'] = true;
+                    }
+                }
+            } elseif ($currentX != $nextX) {
+                if ($direction == "D->U") {
+                    $this->path[$i]['m'] = ($currentX > $nextX) ? 1 : 2;
+                    $direction = ($currentX > $nextX) ? "R->L" : "L->R";
+                } elseif ($direction == "U->D") {
+                    $this->path[$i]['m'] = ($currentX > $nextX) ? 2 : 1;
+                    $direction = ($currentX > $nextX) ? "R->L" : "L->R";
+                    $this->path[$i]['rotate'] = true;
+                }
+            }
+        }
+
     }
 }

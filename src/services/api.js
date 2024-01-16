@@ -3,9 +3,10 @@ import axios from "axios";
 export default {
   async getGeneratedMaze(difficulty) {
     console.log("🚀 ~ getGeneratedMaze ~ difficulty:", difficulty);
+
     let config = {
       method: "get",
-      url: "http://ec2-3-77-201-33.eu-central-1.compute.amazonaws.com/generateMaze",
+      url: "http://ec2-18-195-148-12.eu-central-1.compute.amazonaws.com/generateMaze",
       // data: { difficulty },
     };
 

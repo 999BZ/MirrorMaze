@@ -6,10 +6,10 @@ use Illuminate\Http\Request;
 
 class GenerateMazeController extends Controller
 {
-    public $n = 10;
-    public $m = 10;
+    private $n = 5;
+    private $m = 5;
 
-    public $maze;
+    private $maze;
 
     function show(){
         $this->generateMaze();
@@ -50,7 +50,7 @@ class GenerateMazeController extends Controller
             $setU = $this->findSet($sets, $u[0], $u[1]);
             $setV = $this->findSet($sets, $v[0], $v[1]);
 
-            if ($setU !== $setV) {
+            if ($setU !== $setV || random_int(1,20) == 1) {
                 $this->maze[$u[0]][$u[1]][$edge['directionU']] = "Space";
                 $this->maze[$v[0]][$v[1]][$edge['directionV']] = "Space";
 
@@ -66,8 +66,8 @@ class GenerateMazeController extends Controller
                 }
             }
         }
-        $this->maze[$this->m-1][0][3] = "Space";
-        $this->maze[0][$this->n-1][1] = "Space";
+        $this->maze[0][$this->m-1][1] = "End";
+        $this->maze[$this->n-1][0][3] = "Start";
 
         return $this->maze;
         

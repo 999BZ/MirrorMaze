@@ -51,7 +51,7 @@ export default {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #3b82f6;
+    background: #a3e635;
     margin: -4px 0 0 -4px;
 }
 

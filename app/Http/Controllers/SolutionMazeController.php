@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use SplPriorityQueue;
+
 class SolutionMazeController extends Controller
 {
 private $n;
@@ -35,6 +37,8 @@ private $n;
             $this->queueNodes($NodeX, $NodeY, $edges, $currentPath);
         }
 }
+
+
 private function getEdges(){
         $edges = array();
         for($i=0;$i<$this->n;$i++){
@@ -119,4 +123,62 @@ private function getEdges(){
         }
 
     }
+    private function dijkstra()
+    {
+        $edges = $this->getEdges();
+        $distances = array_fill(0, $this->n * $this->m, PHP_INT_MAX);
+        $distances[$this->start[0] * $this->m + $this->start[1]] = 0;
+
+        $pq = new SplPriorityQueue();
+        $pq->insert([$this->start[0], $this->start[1]], 0);
+
+        while (!$pq->isEmpty()) {
+            [$NodeX, $NodeY] = $pq->extract();
+
+            foreach ($edges as $edge) {
+                if ($edge['u'][0] == $NodeX && $edge['u'][1] == $NodeY) {
+                    $nextNode = $edge['v'];
+                } elseif ($edge['v'][0] == $NodeX && $edge['v'][1] == $NodeY) {
+                    $nextNode = $edge['u'];
+                } else {
+                    continue;
+                }
+
+                $nextX = $nextNode[0];
+                $nextY = $nextNode[1];
+                $weight = 1; 
+
+                if ($distances[$NodeX * $this->m + $NodeY] + $weight < $distances[$nextX * $this->m + $nextY]) {
+                    $distances[$nextX * $this->m + $nextY] = $distances[$NodeX * $this->m + $NodeY] + $weight;
+                    $pq->insert([$nextX, $nextY], -$distances[$nextX * $this->m + $nextY]);
+                }
+            }
+        }
+
+        $currentNode = $this->end;
+        while ($currentNode != $this->start) {
+            $this->path[] = ['x' => $currentNode[1], 'y' => $currentNode[0]];
+            $currentNode = $this->getParentNode($currentNode, $edges, $distances);
+        }
+        $this->path[] = ['x' => $this->start[1], 'y' => $this->start[0]];
+        $this->path = array_reverse($this->path);
+
+        $this->addMirrors();
+    }
+
+    private function getParentNode($node, $edges, $distances)
+    {
+        foreach ($edges as $edge) {
+            if ($edge['v'] == $node && $distances[$edge['u'][0] * $this->m + $edge['u'][1]] + 1 == $distances[$node[0] * $this->m + $node[1]]) {
+                return $edge['u'];
+            } elseif ($edge['u'] == $node && $distances[$edge['v'][0] * $this->m + $edge['v'][1]] + 1 == $distances[$node[0] * $this->m + $node[1]]) {
+                return $edge['v'];
+            }
+        }
+
+        return null;
+    }
 }
+
+
+

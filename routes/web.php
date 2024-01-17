@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SolutionMazeController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\GenerateMazeController;
@@ -23,4 +24,4 @@ Route::get('/', function () {
 Route::get('/generateMaze/{difficulty}',  [GenerateMazeController::class, 'generateMaze']);
 
 
-Route::match(['get', 'post'], '/solution/{solution}',  [SolutionMazeController::class, 'solution']);
+Route::post('/solution/{solution}',  [SolutionMazeController::class, 'solution']);

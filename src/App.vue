@@ -50,13 +50,15 @@
       <div class="w-auto flex flex-col gap-2">
         <div class="text-xl font-bold text-lime-400 flex items-center justify-center">Pick a mirror:</div>
         <div class="w-auto flex gap-2">
-          <img src="./assets/p1.png" class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:bg-white"
-            :disabled="this.running" @click="selectMirror(1)" :class="{ 'bg-white': this.selectedMirror == 1 }">
-          <img src="./assets/p2.png" class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:bg-white"
-            :disabled="this.running" @click="selectMirror(2)" :class="{ 'bg-white': this.selectedMirror == 2 }">
+          <img src="./assets/p1.png"
+            class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:border-red-500"
+            :disabled="this.running" @click="selectMirror(1)" :class="{ 'border-red-500': this.selectedMirror == 1 }">
+          <img src="./assets/p2.png"
+            class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:border-red-500"
+            :disabled="this.running" @click="selectMirror(2)" :class="{ 'border-red-500': this.selectedMirror == 2 }">
           <custom-button text="Remove mirror" @do-action="selectRemove" :disabled="this.running" :class="{
-            'text-red-600': !this.removeSelected,
-            'bg-red-600 text-white': this.removeSelected
+            'text-red-500': !this.removeSelected,
+            'bg-red-500 text-white': this.removeSelected
           }"></custom-button>
         </div>
       </div>
@@ -133,11 +135,10 @@ export default {
       this.isLoading = false;
     },
     async showSolution(solutionMethod) {
-      console.log("🚀 ~ showSolution ~ solutionMethod:", solutionMethod);
       this.solutionBox = false;
       try {
         let a = await Api.getSolution(solutionMethod, this.maze);
-        console.log("🚀 ~ showSolution ~ a:", a)
+        this.goThroughPath(a.data, 0, this.maze.length - 1, true);
       } catch (error) {
         console.log(error)
       }
@@ -187,7 +188,7 @@ export default {
       this.result = null;
     },
     async start() {
-      this.running = true;
+      let path = [];
       for (let i = 0; i < this.maze.length; i++) {
         for (let j = 0; j < this.maze[0].length; j++) {
           this.maze[i][j].status = false;
@@ -195,67 +196,76 @@ export default {
       }
       this.timer.pause();
       let rowIndex = this.startPoint, colIndex = 0, dir = 'left';
-      await new Promise(resolve => setTimeout(resolve, 200));
       while (colIndex != this.maze[0].length || rowIndex != this.endPoint) {
-        this.maze[rowIndex][colIndex].status = true;
-        await new Promise(resolve => setTimeout(resolve, 200));
         if (dir == 'left') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 1, 'rotate': false });
             this.maze[rowIndex][colIndex].rotate = true;
             if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             dir = 'up';
             rowIndex++;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 2 });
             this.maze[rowIndex][colIndex].rotate = false;
             if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             dir = 'down';
             rowIndex--;
           } else {
+            path.push({ 'x': rowIndex, 'y': colIndex });
             if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             colIndex++;
           }
         } else if (dir == 'right') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 1 });
             this.maze[rowIndex][colIndex].rotate = false;
             if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             dir = 'down';
             rowIndex--;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 1, 'rotate': false });
             this.maze[rowIndex][colIndex].rotate = true;
             if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             dir = 'up';
             rowIndex++;
           } else {
+            path.push({ 'x': rowIndex, 'y': colIndex });
             if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             colIndex--;
           }
         } else if (dir == 'up') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 1 });
             this.maze[rowIndex][colIndex].rotate = false;
             if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             dir = 'left';
             colIndex++;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 2 });
             this.maze[rowIndex][colIndex].rotate = false;
             if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             dir = 'right';
             colIndex--;
           } else {
+            path.push({ 'x': rowIndex, 'y': colIndex });
             if (this.maze[rowIndex][colIndex][2] == 'Wall') break;
             rowIndex++;
           }
         } else if (dir == 'down') {
           if (this.maze[rowIndex][colIndex].mirror == 1) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 1, 'rotate': true });
             this.maze[rowIndex][colIndex].rotate = true;
             if (this.maze[rowIndex][colIndex][3] == 'Wall') break;
             dir = 'right';
             colIndex--;
           } else if (this.maze[rowIndex][colIndex].mirror == 2) {
+            path.push({ 'x': rowIndex, 'y': colIndex, 'm': 2, 'rotate': true });
             this.maze[rowIndex][colIndex].rotate = true;
             if (this.maze[rowIndex][colIndex][1] == 'Wall') break;
             dir = 'left';
             colIndex++;
           } else {
+            path.push({ 'x': rowIndex, 'y': colIndex });
             if (this.maze[rowIndex][colIndex][0] == 'Wall') break;
             rowIndex--;
           }
@@ -263,20 +273,33 @@ export default {
           console.log('Error');
         }
       }
-      if (colIndex == this.maze[0].length && rowIndex == this.endPoint) {
-        this.result = 'success';
+      this.goThroughPath(path, rowIndex, colIndex);
+    },
+    async goThroughPath(array, rowIndex, colIndex, fromBack = false) {
+      this.running = true;
+      if (fromBack) {
+        for (let i = 0; i < array.length; i++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+          this.maze[array[i]['y']][array[i]['x']].status = true;
+          if (array[i]['m']) this.maze[array[i]['y']][array[i]['x']].mirror = array[i]['m'];
+          if (array[i]['rotate']) this.maze[array[i]['y']][array[i]['x']].rotate = true;
+        }
+        await new Promise(resolve => setTimeout(resolve, 200));
         this.hasSucceded = true;
       } else {
-        this.result = 'failure';
+        for (let i = 0; i < array.length; i++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+          this.maze[array[i]['x']][array[i]['y']].status = true;
+        }
+        if (colIndex == this.maze.length && rowIndex == this.endPoint) {
+          this.result = 'success';
+          this.hasSucceded = true;
+        } else {
+          this.result = 'failure';
+        }
       }
-    },
-    // goThroughPath(array) {
-    //   for (let i = 0; i < array.length; i++) {
-    //     this.maze[array[i][0]['x']][array[i][0]['y']].status = true;
-    //     if(array[i]['m']) this.maze[array[0]['x']][array[0]['y']].mirror = array['m'];
-    //     if(array[i]['rotate']) this.maze[array[0]['x']][array[0]['y']].rotate = array['rotate'];
-    //   }
-    // }
+      this.running = false;
+    }
   },
 }
 </script>

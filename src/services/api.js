@@ -19,7 +19,7 @@ export default {
     let config = {
       method: "post",
       url: `https://fiek.mirrormaze.rf.gd/solution/${solutionType}`,
-      data: maze,
+      data: { data: maze },
       headers: {
         Accept: "application/json, text/plain, */*",
       },

@@ -6,13 +6,13 @@ use Illuminate\Http\Request;
 
 class GenerateMazeController extends Controller
 {
-    private $n = 5;
-    private $m = 5;
+    private $n = 10;
+    private $m = 10;
 
     private $maze;
 
     function show(){
-        $this->generateMaze();
+        $this->generateMaze("easy");
         for($i = 0;$i<$this->n;$i++){
             for($j = 0;$j<$this->m;$j++){
                 echo '['.$this->maze[$i][$j][0].' '.$this->maze[$i][$j][1].' '.$this->maze[$i][$j][2].' '.$this->maze[$i][$j][3].']';
@@ -21,7 +21,8 @@ class GenerateMazeController extends Controller
         }
     }
 
-    function generateMaze(){
+    function generateMaze($difficulty){
+        $this->setDifficulty($difficulty);
         for($i = 0;$i<$this->n;$i++){
             for($j = 0;$j<$this->m;$j++){
                 $this->maze[$i][$j] = array();
@@ -111,6 +112,18 @@ class GenerateMazeController extends Controller
             return $this->findSet($sets, $sets[$i][$j][0], $sets[$i][$j][1]);
         }
     }
-    
+    private function setDifficulty($difficulty){
+        if($difficulty == "easy"){
+            $this->n = 10;
+            $this->m = 10;
+        }elseif($difficulty == "medium"){
+            $this->n = 15;
+            $this->m = 15;
+        }elseif($difficulty == "hard"){
+            $this->n = 20;
+            $this->m = 20;
+        }
+    }
 
 }
+

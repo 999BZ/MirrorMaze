@@ -17,26 +17,38 @@ private $n;
 
     private $queue = array();
     private $path = array();
-    public function bfs(Request $request){
-        $this->maze = $request->query('data');
+
+    public function solution($solution,Request $request){
+        $data = $request->json()->all();
+        $this->maze = $data['data'];
         $this->n = sizeof($this->maze);
         $this->m = sizeof($this->maze);
+        if($solution == 'bfs'){
+            $this->dijkstra();
+        }else if($solution == "dijkstra"){
+            $this->dijkstra();
+        }
+        return $this->path;
+    }
+
+    private function bfs(){
         $edges = $this->getEdges();
         $this->queue = [[$this->start[0], $this->start[1], []]];
         while (!empty($this->queue)) {
             [$NodeX, $NodeY, $currentPath] = array_shift($this->queue);
             if ($NodeX == $this->end[0] && $NodeY == $this->end[1]) {
-                $currentPath = array_merge($currentPath, [$NodeX . ',' . $NodeY]);
+                $currentPath = array_merge($currentPath, [$NodeY . ',' . $NodeX]);
                 foreach ($currentPath as $pair) {
                     list($x, $y) = explode(",", $pair);
                     $this->path[] = ['x' => (int)$x, 'y' => (int)$y];
                 }
                 $this->addMirrors();
-                return $this->path;
+                return;
             }
             $this->queueNodes($NodeX, $NodeY, $edges, $currentPath);
         }
-}
+    }
+
 
 
 private function getEdges(){
@@ -72,20 +84,25 @@ private function getEdges(){
         return $edges;
     }
 
-    private function queueNodes($i,$j,$edges,$currentPath){
-        foreach ($edges as $edge) {
+    private function queueNodes($i,$j,&$edges,$currentPath){
+        foreach ($edges as $key => $edge) {
             if ($edge['u'][0] == $i && $edge['u'][1] == $j) {
                 $nextNode = $edge['v'];
+                unset($edges[$key]);
             } elseif ($edge['v'][0] == $i && $edge['v'][1] == $j) {
                 $nextNode = $edge['u'];
+                unset($edges[$key]);
             } else {
                 continue;
             }
-            if (!in_array($nextNode, $currentPath, true)) {
-                $newPath = array_merge($currentPath, [$i . ',' . $j]);
+
+            $nodeString = $nextNode[1] . ',' . $nextNode[0];
+            if (!in_array($nodeString, $currentPath, true)) {
+                $newPath = array_merge($currentPath, [$j . ',' . $i]);
                 array_push($this->queue, [$nextNode[0], $nextNode[1], $newPath]);
             }
         }
+        $edges = array_values($edges);
     }
     private function addMirrors(){
         $direction = "L->R";
@@ -98,14 +115,14 @@ private function getEdges(){
 
             if ($currentY != $nextY) {
                 if ($direction == "L->R") {
-                    $this->path[$i]['m'] = ($currentY > $nextY) ? 1 : 2;
-                    $direction = ($currentY > $nextY) ? "U->D" : "D->U";
+                    $this->path[$i]['m'] = ($currentY > $nextY) ? 2 : 1;
+                    $direction = ($currentY > $nextY) ? "D->U" : "U->D" ;
                     if ($currentY < $nextY) {
                         $this->path[$i]['rotate'] = true;
                     }
                 } elseif ($direction == "R->L") {
-                    $this->path[$i]['m'] = ($currentY > $nextY) ? 2 : 1;
-                    $direction = ($currentY > $nextY) ? "U->D" : "D->U";
+                    $this->path[$i]['m'] = ($currentY > $nextY) ? 1 : 2;
+                    $direction = ($currentY > $nextY) ? "D->U" : "U->D";
                     if ($currentY < $nextY) {
                         $this->path[$i]['rotate'] = true;
                     }
@@ -114,14 +131,16 @@ private function getEdges(){
                 if ($direction == "D->U") {
                     $this->path[$i]['m'] = ($currentX > $nextX) ? 1 : 2;
                     $direction = ($currentX > $nextX) ? "R->L" : "L->R";
+                    $this->path[$i]['rotate'] = true;
                 } elseif ($direction == "U->D") {
                     $this->path[$i]['m'] = ($currentX > $nextX) ? 2 : 1;
                     $direction = ($currentX > $nextX) ? "R->L" : "L->R";
-                    $this->path[$i]['rotate'] = true;
                 }
             }
+            if($i+1 == sizeof($this->path)- 1 && $direction == "D->U"){
+                $this->path[$i+1]['m'] = 2;
+            }
         }
-
     }
     private function dijkstra()
     {

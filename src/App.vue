@@ -1,15 +1,21 @@
 <template>
-  <div class="flex flex-col gap-2">
-    <div class="flex justify-center gap-5">
-      <div class="flex h-auto justify-center content-center flex-wrap w-1/2">
-        <custom-button text="New Maze" @do-action="this.chooseDifficulty = true" :disabled="this.stop"></custom-button>
+  <div class="flex flex-col gap-2 my-10">
+    <h1 class="text-5xl font-extrabold mb-5 text-lime-400">Mirror Maze Game</h1>
+    <p class="text-xl font-bold text-lime-400">{{ this.timer.getTimeValues().toString() }}
+    </p>
+    <div class="flex justify-center md:flex-row flex-col gap-5">
+      <div class="flex h-auto md:justify-center justify-evenly content-center flex-wrap md:w-1/2 w-full">
+        <custom-button text="New Maze" @do-action="this.chooseDifficulty = true" :disabled="this.running"></custom-button>
+        <custom-button text="Show solution" @do-action="this.solutionBox = true" :disabled="this.running"
+          class="flex md:hidden"></custom-button>
       </div>
       <div class="flex justify-center" style="width: 32.5rem; height: 32.5rem;" v-if="isLoading">
         <base-spinner></base-spinner>
       </div>
       <div class="flex h-auto justify-center" v-else>
-        <div class="h-full flex flex-col justify-end">
-          <img src="./assets/light.png" class="bg-white border-y"
+        <div class="h-full md:flex flex-col justify-end hidden">
+          <img id="light1" src="./assets/light.png" class="border-y-2 cursor-pointer border-lime-400"
+            :class="{ 'bg-white': this.running || this.hasSucceded }"
             :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
         </div>
         <div class="flex flex-wrap flex-col" style="height: 32.5rem; width: 32.5rem;">
@@ -17,10 +23,10 @@
             :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }">
             <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`"
               :style="{ width: `${this.maze ? 100 / this.maze.length : 0}%` }"
-              class="hover:border-2 cursor-pointer border-black" :disabled="this.stop"
+              class="hover:border-2 cursor-pointer border-lime-400" :disabled="this.running"
               @click="setMirror(rowIndex, colIndex)" :class="{
-                'bg-white': !cell.status,
-                'bg-sky-400': cell.status,
+                'bg-black': !cell.status,
+                'bg-white': cell.status,
                 'border-t-2': cell[0] == 'Wall',
                 'border-r-2': cell[1] == 'Wall',
                 'border-b-2': cell[2] == 'Wall',
@@ -31,39 +37,42 @@
             </div>
           </div>
         </div>
-        <div class="h-full flex flex-col justify-start">
-          <img src="./assets/light.png" class="bg-white border-y"
-            :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
+        <div class="h-full md:flex flex-col justify-start hidden">
+          <img id="light2" src="./assets/light.png" class="border-y-2 border-x-white cursor-pointer border-lime-400"
+            :class="{ 'bg-white': hasSucceded }" :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
         </div>
       </div>
-      <div class="flex h-auto justify-center content-center flex-wrap w-1/2">
-        <custom-button text="Show solution" @do-action="showSolution" :disabled="this.stop"></custom-button>
+      <div class="md:flex hidden h-auto justify-center content-center flex-wrap w-1/2">
+        <custom-button text="Show solution" @do-action="this.solutionBox = true" :disabled="this.running"></custom-button>
       </div>
     </div>
     <div class="w-full flex justify-center">
-      <div class="w-auto flex gap-2">
-        <img src="./assets/p1.png" class="w-16 h-16 border-2 border-black cursor-pointer" :disabled="this.stop"
-          @click="selectMirror(1)" :class="{ 'bg-black/50': this.selectedMirror == 1 }">
-        <img src="./assets/p2.png" class="w-16 h-16 border-2 border-black cursor-pointer" :disabled="this.stop"
-          @click="selectMirror(2)" :class="{ 'bg-black/50': this.selectedMirror == 2 }">
-        <custom-button text="Remove mirror" @do-action="selectRemove" :disabled="this.stop" :class="{
-          'text-red-500 bg-white': !this.removeSelected,
-          'bg-red-500 text-white': this.removeSelected
-        }"></custom-button>
+      <div class="w-auto flex flex-col gap-2">
+        <div class="text-xl font-bold text-lime-400 flex items-center justify-center">Pick a mirror:</div>
+        <div class="w-auto flex gap-2">
+          <img src="./assets/p1.png" class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:bg-white"
+            :disabled="this.running" @click="selectMirror(1)" :class="{ 'bg-white': this.selectedMirror == 1 }">
+          <img src="./assets/p2.png" class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:bg-white"
+            :disabled="this.running" @click="selectMirror(2)" :class="{ 'bg-white': this.selectedMirror == 2 }">
+          <custom-button text="Remove mirror" @do-action="selectRemove" :disabled="this.running" :class="{
+            'text-red-600': !this.removeSelected,
+            'bg-red-600 text-white': this.removeSelected
+          }"></custom-button>
+        </div>
       </div>
     </div>
     <div class="w-full flex justify-center">
       <div class="w-auto gap-2 flex">
-        <custom-button text="Start" @do-action="start" :disabled="this.stop"></custom-button>
-        <custom-button text="Reset" @do-action="reset(true)" :disabled="this.stop"></custom-button>
+        <custom-button text="Start" @do-action="start" :disabled="this.running"></custom-button>
+        <custom-button text="Reset" @do-action="reset(true)" :disabled="this.running"></custom-button>
       </div>
     </div>
   </div>
-  <alert-box v-if="this.result" :result="result" @close-box="this.result = null" @try-again="reset"></alert-box>
+  <alert-box v-if="this.result" :result="result" @close-box="closeSuccess" @try-again="reset"></alert-box>
   <difficulty-box v-if="this.chooseDifficulty" @close-box="this.chooseDifficulty = false"
     @choose-difficulty="getMaze"></difficulty-box>
+  <solution-box v-if="this.solutionBox" @close-box="this.solutionBox = null" @show-solution="showSolution"></solution-box>
 </template>
-
 
 <script>
 import Api from './services/api.js';
@@ -71,7 +80,10 @@ import Api from './services/api.js';
 import CustomButton from './components/CustomButton.vue';
 import AlertBox from './components/AlertBox.vue';
 import DifficultyBox from './components/DifficultyBox.vue';
+import SolutionBox from './components/SolutionBox.vue';
 import BaseSpinner from './components/BaseSpinner.vue';
+
+var { Timer } = require("easytimer.js");
 
 export default {
   name: 'App',
@@ -80,12 +92,14 @@ export default {
     AlertBox,
     BaseSpinner,
     DifficultyBox,
+    SolutionBox,
   },
   beforeMount() {
-    this.getMaze();
+    this.getMaze('easy');
   },
   data() {
     return {
+      timer: new Timer(),
       maze: [],
       selectedMirror: 0,
       removeSelected: false,
@@ -94,21 +108,23 @@ export default {
       directionFrom: 'left',
       startPoint: null,
       endPoint: 0,
-      stop: false,
+      running: false,
       result: null,
+      solutionBox: false,
       isLoading: false,
       chooseDifficulty: false,
+      hasSucceded: false,
     };
   },
   methods: {
     async getMaze(difficulty) {
+      this.timer = new Timer();
       this.isLoading = true;
+      this.hasSucceded = false;
       this.chooseDifficulty = false;
       try {
         let a = await Api.getGeneratedMaze(difficulty);
-        if (this.startPoint == null) {
-          this.startPoint = 9;
-        }
+        this.startPoint = a.data.length - 1;
         this.maze = a.data;
         this.resetMaze = a.data;
       } catch (error) {
@@ -116,10 +132,18 @@ export default {
       }
       this.isLoading = false;
     },
-    showSolution() {
-      // Get the solution from backend using API
+    async showSolution(solutionMethod) {
+      console.log("🚀 ~ showSolution ~ solutionMethod:", solutionMethod);
+      this.solutionBox = false;
+      try {
+        let a = await Api.getSolution(solutionMethod, this.maze);
+        console.log("🚀 ~ showSolution ~ a:", a)
+      } catch (error) {
+        console.log(error)
+      }
     },
     setMirror(rowIndex, colIndex) {
+      if (!this.timer.isRunning()) this.timer.start();
       if (this.removeSelected)
         this.maze[rowIndex][colIndex].mirror = 0;
       else if (this.selectedMirror != 0)
@@ -135,8 +159,14 @@ export default {
       this.removeSelected = !this.removeSelected;
       this.selectedMirror = 0;
     },
+    closeSuccess() {
+      this.result = null;
+      this.running = false;
+    },
     reset(shouldRemoveMirrors = false) {
-      this.stop = true;
+      this.hasSucceded = false;
+      this.timer = new Timer();
+      this.running = true;
       if (shouldRemoveMirrors) {
         for (let i = 0; i < this.maze.length; i++) {
           for (let j = 0; j < this.maze[0].length; j++) {
@@ -151,14 +181,21 @@ export default {
           }
         }
       }
+      this.running = false;
       this.removeSelected = false;
       this.selectedMirror = 0;
-      this.stop = false;
       this.result = null;
     },
     async start() {
-      this.stop = true;
+      this.running = true;
+      for (let i = 0; i < this.maze.length; i++) {
+        for (let j = 0; j < this.maze[0].length; j++) {
+          this.maze[i][j].status = false;
+        }
+      }
+      this.timer.pause();
       let rowIndex = this.startPoint, colIndex = 0, dir = 'left';
+      await new Promise(resolve => setTimeout(resolve, 200));
       while (colIndex != this.maze[0].length || rowIndex != this.endPoint) {
         this.maze[rowIndex][colIndex].status = true;
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -228,11 +265,18 @@ export default {
       }
       if (colIndex == this.maze[0].length && rowIndex == this.endPoint) {
         this.result = 'success';
+        this.hasSucceded = true;
       } else {
         this.result = 'failure';
       }
-      this.stop = false;
     },
+    // goThroughPath(array) {
+    //   for (let i = 0; i < array.length; i++) {
+    //     this.maze[array[i][0]['x']][array[i][0]['y']].status = true;
+    //     if(array[i]['m']) this.maze[array[0]['x']][array[0]['y']].mirror = array['m'];
+    //     if(array[i]['rotate']) this.maze[array[0]['x']][array[0]['y']].rotate = array['rotate'];
+    //   }
+    // }
   },
 }
 </script>
@@ -244,6 +288,14 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #a3e635;
+  border-radius: 4px;
 }
 </style>

@@ -4,6 +4,8 @@ use App\Http\Controllers\SolutionMazeController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\GenerateMazeController;
+
+use App\Http\Controllers\SolutionMazeController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes

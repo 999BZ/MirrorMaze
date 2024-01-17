@@ -14,10 +14,10 @@ use App\Http\Controllers\GenerateMazeController;
 |
 */
 
-// Route::get('/', [GenerateMazeController::class, 'show']);
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/generateMaze',  [GenerateMazeController::class, 'show']);
 
-Route::get('/generateMaze',  [GenerateMazeController::class, 'generateMaze']);
+Route::get('/generateMaze/{difficulty}',  [GenerateMazeController::class, 'generateMaze']);
+
+
+Route::match(['get', 'post'], '/solution/{solution}',  [SolutionMazeController::class, 'solution']);

@@ -24,7 +24,7 @@ private $n;
         $this->n = sizeof($this->maze);
         $this->m = sizeof($this->maze);
         if($solution == 'bfs'){
-            $this->dijkstra();
+            $this->bfs();
         }else if($solution == "dijkstra"){
             $this->dijkstra();
         }
@@ -198,6 +198,3 @@ private function getEdges(){
         return null;
     }
 }
-
-
-

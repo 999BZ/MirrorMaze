@@ -6,7 +6,7 @@ export default {
 
     let config = {
       method: "get",
-      url: "http://ec2-18-195-148-12.eu-central-1.compute.amazonaws.com/generateMaze/",
+      url: "https://fiek.mirrormaze.rf.gd/generateMaze/",
       // data: { difficulty },
     };
 

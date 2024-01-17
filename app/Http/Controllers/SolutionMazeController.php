@@ -139,6 +139,7 @@ private function getEdges(){
             }
             if($i+1 == sizeof($this->path)- 1 && $direction == "D->U"){
                 $this->path[$i+1]['m'] = 2;
+                $this->path[$i+1]['rotate'] = true;
             }
         }
     }

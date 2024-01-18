@@ -4,6 +4,7 @@
             :class="{ 'border-lime-400': isSuccess, 'border-red-600': !isSuccess }">
             <h1 class="text-xl font-bold" :class="{ 'text-lime-400': isSuccess, 'text-red-600': !isSuccess }">{{ isSuccess
                 ? 'Well done. You have finished it.' : 'You hit a wall. Try Again!' }}</h1>
+            <p v-if="this.result == 'success'" class="font-bold text-lime-400">{{ formattedTime }}</p>
             <div class="w-full flex justify-end flex-wrap">
                 <button class="py-2 px-4 rounded-lg border-2 bg-black" :class="{
                     'hover:bg-lime-400 hover:text-black text-lime-400 border-lime-400': isSuccess,
@@ -16,11 +17,26 @@
 
 <script>
 export default {
-    props: ['result'],
+    props: ['result', 'time'],
     emits: ['try-again', 'close-box'],
     computed: {
         isSuccess() {
             return this.result == 'success';
+        },
+        formattedTime() {
+            const [hours, minutes, seconds] = this.time.split(':').map(Number);
+            let formattedString = 'Your time was:';
+            if (hours > 0) {
+                formattedString += ` ${hours} hr`;
+            }
+            if (minutes > 0) {
+                formattedString += ` ${minutes} min`;
+            }
+            if (seconds > 0 || (hours === 0 && minutes === 0 && seconds === 0)) {
+                formattedString += ` ${seconds} sec`;
+            }
+            formattedString += '.';
+            return formattedString.trim();
         },
     },
     methods: {

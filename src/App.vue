@@ -1,8 +1,7 @@
 <template>
   <div class="flex flex-col gap-2 my-10">
     <h1 class="text-5xl font-extrabold mb-5 text-lime-400">Mirror Maze Game</h1>
-    <p class="text-xl font-bold text-lime-400">{{ this.timer.getTimeValues().toString() }}
-    </p>
+    <p class="text-xl font-bold text-lime-400" id="timer">{{ this.time }}</p>
     <div class="flex justify-center md:flex-row flex-col gap-5">
       <div class="flex h-auto md:justify-center justify-evenly content-center flex-wrap md:w-1/2 w-full">
         <custom-button text="New Maze" @do-action="this.chooseDifficulty = true" :disabled="this.running"></custom-button>
@@ -16,13 +15,13 @@
         <div class="h-full md:flex flex-col justify-end hidden">
           <img id="light1" src="./assets/light.png" class="border-y-2 cursor-pointer border-lime-400"
             :class="{ 'bg-white': this.running || this.hasSucceded }"
-            :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
+            :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }" />
         </div>
         <div class="flex flex-wrap flex-col" style="height: 32.5rem; width: 32.5rem;">
           <div v-for="(row, rowIndex) in maze" :key="`row${rowIndex}`" class="flex"
-            :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }">
+            :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }">
             <div v-for="(cell, colIndex) in row" :key="`col${colIndex}`"
-              :style="{ width: `${this.maze ? 100 / this.maze.length : 0}%` }"
+              :style="{ width: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }"
               class="hover:border-2 cursor-pointer border-lime-400" :disabled="this.running"
               @click="setMirror(rowIndex, colIndex)" :class="{
                 'bg-black': !cell.status,
@@ -39,7 +38,8 @@
         </div>
         <div class="h-full md:flex flex-col justify-start hidden">
           <img id="light2" src="./assets/light.png" class="border-y-2 border-x-white cursor-pointer border-lime-400"
-            :class="{ 'bg-white': hasSucceded }" :style="{ height: `${this.maze ? 100 / this.maze.length : 0}%` }" />
+            :class="{ 'bg-white': hasSucceded }"
+            :style="{ height: `${this.maze.length > 0 ? 100 / this.maze.length : 0}%` }" />
         </div>
       </div>
       <div class="md:flex hidden h-auto justify-center content-center flex-wrap w-1/2">
@@ -57,8 +57,8 @@
             class="w-16 h-16 border-2 border-black cursor-pointer rounded-2xl hover:border-red-500"
             :disabled="this.running" @click="selectMirror(2)" :class="{ 'border-red-500': this.selectedMirror == 2 }">
           <custom-button text="Remove mirror" @do-action="selectRemove" :disabled="this.running" :class="{
-            'text-red-500': !this.removeSelected,
-            'bg-red-500 text-white': this.removeSelected
+            'text-red-600': !this.removeSelected,
+            'bg-red-600 text-white': this.removeSelected
           }"></custom-button>
         </div>
       </div>
@@ -70,7 +70,7 @@
       </div>
     </div>
   </div>
-  <alert-box v-if="this.result" :result="result" @close-box="closeSuccess" @try-again="reset"></alert-box>
+  <alert-box v-if="this.result" :result="result" :time="time" @close-box="closeSuccess" @try-again="reset"></alert-box>
   <difficulty-box v-if="this.chooseDifficulty" @close-box="this.chooseDifficulty = false"
     @choose-difficulty="getMaze"></difficulty-box>
   <solution-box v-if="this.solutionBox" @close-box="this.solutionBox = null" @show-solution="showSolution"></solution-box>
@@ -98,11 +98,15 @@ export default {
   },
   beforeMount() {
     this.getMaze('easy');
+    this.timer.addEventListener('secondsUpdated', () => {
+      this.time = this.timer.getTimeValues().toString();
+    });
   },
   data() {
     return {
       timer: new Timer(),
       maze: [],
+      time: '',
       selectedMirror: 0,
       removeSelected: false,
       mirror1: require('./assets/1.png'),
@@ -120,7 +124,7 @@ export default {
   },
   methods: {
     async getMaze(difficulty) {
-      this.timer = new Timer();
+      this.returnToStart();
       this.isLoading = true;
       this.hasSucceded = false;
       this.chooseDifficulty = false;
@@ -135,6 +139,13 @@ export default {
       this.isLoading = false;
     },
     async showSolution(solutionMethod) {
+      for (let i = 0; i < this.maze.length; i++) {
+        for (let j = 0; j < this.maze[0].length; j++) {
+          this.maze[i][j].status = false;
+          this.maze[i][j].mirror = null;
+        }
+      }
+      this.returnToStart();
       this.solutionBox = false;
       try {
         let a = await Api.getSolution(solutionMethod, this.maze);
@@ -149,9 +160,9 @@ export default {
         this.maze[rowIndex][colIndex].mirror = 0;
       else if (this.selectedMirror != 0)
         this.maze[rowIndex][colIndex].mirror = this.selectedMirror;
-
     },
     selectMirror(num) {
+      if (!this.timer.isRunning()) this.timer.start();
       if (this.selectedMirror == num) this.selectedMirror = 0;
       else this.selectedMirror = num;
       this.removeSelected = false;
@@ -165,8 +176,7 @@ export default {
       this.running = false;
     },
     reset(shouldRemoveMirrors = false) {
-      this.hasSucceded = false;
-      this.timer = new Timer();
+      this.returnToStart();
       this.running = true;
       if (shouldRemoveMirrors) {
         for (let i = 0; i < this.maze.length; i++) {
@@ -194,7 +204,7 @@ export default {
           this.maze[i][j].status = false;
         }
       }
-      this.timer.pause();
+      this.timer.stop();
       let rowIndex = this.startPoint, colIndex = 0, dir = 'left';
       while (colIndex != this.maze[0].length || rowIndex != this.endPoint) {
         if (dir == 'left') {
@@ -286,11 +296,13 @@ export default {
         }
         await new Promise(resolve => setTimeout(resolve, 200));
         this.hasSucceded = true;
+        this.running = false;
       } else {
         for (let i = 0; i < array.length; i++) {
           await new Promise(resolve => setTimeout(resolve, 200));
           this.maze[array[i]['x']][array[i]['y']].status = true;
         }
+        await new Promise(resolve => setTimeout(resolve, 200));
         if (colIndex == this.maze.length && rowIndex == this.endPoint) {
           this.result = 'success';
           this.hasSucceded = true;
@@ -298,8 +310,16 @@ export default {
           this.result = 'failure';
         }
       }
-      this.running = false;
-    }
+      // this.running = false;  
+    },
+    returnToStart() {
+      this.hasSucceded = false;
+      this.timer.reset();
+      this.timer.stop();
+      this.time = '00:00:00';
+      this.selectedMirror = 0;
+      this.removeSelected = false;
+    },
   },
 }
 </script>

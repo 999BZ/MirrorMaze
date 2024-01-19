@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SolutionMazeController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\GenerateMazeController;
@@ -14,10 +15,13 @@ use App\Http\Controllers\GenerateMazeController;
 |
 */
 
-// Route::get('/', [GenerateMazeController::class, 'show']);
-
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/generateMaze',  [GenerateMazeController::class, 'generateMaze']);
+
+
+Route::get('/generateMaze/{difficulty}',  [GenerateMazeController::class, 'generateMaze']);
+
+
+Route::post('/solution/{solution}',  [SolutionMazeController::class, 'solution']);
